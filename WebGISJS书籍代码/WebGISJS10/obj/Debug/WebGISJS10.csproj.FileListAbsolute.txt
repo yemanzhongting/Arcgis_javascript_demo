@@ -1,0 +1,9 @@
+E:\QQClouds\Develop\WebGIS\JS\Program\WebGISJS10\WebGISJS10\bin\WebGISJS10.dll
+E:\QQClouds\Develop\WebGIS\JS\Program\WebGISJS10\WebGISJS10\bin\WebGISJS10.pdb
+E:\QQClouds\Develop\WebGIS\JS\Program\WebGISJS10\WebGISJS10\obj\Debug\WebGISJS10.dll
+E:\QQClouds\Develop\WebGIS\JS\Program\WebGISJS10\WebGISJS10\obj\Debug\WebGISJS10.pdb
+D:\Develop\WebGISJS10\WebGISJS10\bin\WebGISJS10.dll
+D:\Develop\WebGISJS10\WebGISJS10\bin\WebGISJS10.pdb
+D:\Develop\WebGISJS10\WebGISJS10\obj\Debug\WebGISJS10.dll
+D:\Develop\WebGISJS10\WebGISJS10\obj\Debug\WebGISJS10.pdb
+D:\Develop\WebGISJS10\WebGISJS10\obj\Debug\WebGISJS10.csprojResolveAssemblyReference.cache

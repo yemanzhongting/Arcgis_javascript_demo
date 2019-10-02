@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>点密度专题图</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        html, body, #map 
+        {
+            height: 100%;
+            margin: 0;
+        }
+        #info 
+        {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font: 14px sans-serif;
+            background: #fff;
+            width: 160px;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+                "esri/layers/ArcGISTiledMapServiceLayer",
+                "esri/layers/FeatureLayer",
+                "esri/InfoTemplate",
+                "esri/renderers/DotDensityRenderer",
+                "esri/symbols/SimpleLineSymbol",
+                "esri/dijit/Legend",
+                "esri/Color",
+                "dojo/domReady!"], funDotsensity);
+        function funDotsensity(Map, ArcGISTiledMapServiceLayer, FeatureLayer, InfoTemplate, DotDensityRenderer, SimpleLineSymbol, Legend, Color)
+        {
+            //添加底图
+            var map = new Map("map");
+            var baseMapUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+            var baseMap = new ArcGISTiledMapServiceLayer(baseMapUrl);
+            map.addLayer(baseMap);
+            //添加要素图层，并未要素图层添加点击窗口，标题为CNTRY_NAME值，内容显示所有字段
+            var layerUrl = "http://services.arcgis.com/BG6nSlhZSAWtExvp/ArcGIS/rest/services/Demographics_World_Simp/FeatureServer/0";
+            var layer = new FeatureLayer(layerUrl, {
+                infoTemplate: new InfoTemplate("${CNTRY_NAME}", "${*}"),
+                mode: FeatureLayer.MODE_ONDEMAND,
+                outFields: ["*"]
+            });
+            //声明点密度专题图
+            var renderer = new DotDensityRenderer({
+                //设置专题图填充背景色及边框线
+                backgroundColor: new Color("#FFFFFF"),
+                outline: new SimpleLineSymbol().setColor(new Color([0, 0, 255])),
+                //设置点密度值使用的字段及点的颜色
+                fields: [{ name: "POP2007", color: new Color("#FF0000")}],
+                //点的形状
+                dotShape: "circle",
+                //每个点代表的值
+                dotValue: 1000000,
+                //点的大小
+                dotSize: 1
+            });
+            //为要素图层创建点密度专题图
+            layer.setRenderer(renderer);
+            //将要素图层添加到地图
+            map.addLayers([layer]);
+            //为地图添加图层layers-add-result事件（所有图层加载结束触发），用来添加图例
+            map.on("layers-add-result", funAddResult);
+            function funAddResult(e)
+            {
+                var corn = e.layers[0].layer;
+                var legend = new Legend({ map: map, layerInfos: [{ layer: corn, title: "人口分布（2007年）"}] }, "legend");
+                legend.startup();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="info">
+        <div id="legend"></div>
+    </div>
+</body>
+</html>

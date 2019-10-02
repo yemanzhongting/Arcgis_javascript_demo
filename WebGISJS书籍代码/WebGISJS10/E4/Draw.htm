@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>交互式绘制图形</title>
+    <link rel="stylesheet" href="http://localhost/arcgis_js_api/library/3.20/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://localhost/arcgis_js_api/library/3.20/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.20/3.20/init.js"></script>
+    <script type="text/javascript" src="../Dojo/jsapi_vsdoc12_v38.js"></script>
+    <style type="text/css">
+        .MapClass
+        {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #0094ff;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+            "dojo/dom",
+            "dojo/on",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "esri/layers/GraphicsLayer",
+            "dojo/query",
+            "esri/toolbars/draw",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/graphic",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "dojo/domReady!"], funDraw);
+        function funDraw(Map, dom, on, ArcGISDynamicMapServiceLayer, GraphicsLayer,query, Draw, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, SimpleFillSymbol)
+        {
+            var map = new Map("MyMapDiv");
+            var layer = new ArcGISDynamicMapServiceLayer("http://localhost/ArcGIS/rest/services/usaDynamic/MapServer");
+            map.addLayer(layer);
+            var graphicslayer = new GraphicsLayer();
+            map.addLayer(graphicslayer);
+            //声明一个名为toolbar的“Draw”工具，绘制图形的目标地图为map，鼠标提示信息设置为显示
+            var toolbar = new Draw(map, { showTooltips: true });
+            var lSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new dojo.Color([0, 255, 0]), 5);
+            var clSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0, 0, 255]), 2);
+            var mSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_X, 10, clSymbol, new dojo.Color([0, 0, 255]));
+            var fSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_HORIZONTAL, clSymbol, new dojo.Color([0, 255, 255]));
+            //为声明的“Draw”工具toolbar添加绘制结束事件
+            on(toolbar, "draw-complete", funResult);
+            //toolbar绘制结束事件处理函数
+            function funResult(result)
+            {
+                //获取绘制的Graphic图形的geometry属性
+                var geometry = result.geometry;
+                //获取Graphic的点、线、面类型
+                var type = geometry.type;
+                var graphic;
+                //分别为点、线、面创建Graphic，并设置不同的Symbol属性
+                switch (type)
+                {
+                    case "point":
+                        graphic = new Graphic(geometry, mSymbol);
+                        break;
+                    case "polyline":
+                        graphic = new Graphic(geometry, lSymbol);
+                        break;
+                    case "polygon":
+                        graphic = new Graphic(geometry, fSymbol);
+                        break;
+                }
+                //将Graphic添加到地图的GraphicsLayer图层
+                graphicslayer.add(graphic);
+            }
+            //为按钮添加单击事件
+            query("button").on("click", funEvent);
+            //按钮单击事件处理函数
+            function funEvent(event)
+            {
+                //获取按钮的文字
+                var value = this.innerHTML;
+                //根据所点击按钮的文字不同，分别使用定义的“Draw”工具绘制点、线、面、徒手线、徒手面
+                switch (value)
+                {
+                    case "绘制点":
+                        toolbar.activate(Draw.POINT, { showTooltips: true });
+                        break;
+                    case "绘制折线":
+                        toolbar.activate(Draw.POLYLINE, { showTooltips: true });
+                        break;
+                    case "绘制面":
+                        toolbar.activate(Draw.POLYGON, { showTooltips: true });
+                        break;
+                    case "绘制徒手线":
+                        toolbar.activate(Draw.FREEHAND_POLYLINE, { showTooltips: true });
+                        break;
+                    case "绘制徒手面":
+                        toolbar.activate(Draw.FREEHAND_POLYGON, { showTooltips: true });
+                        break;
+                    case "结束绘制":
+                        //释放鼠标，回到地图漫游状态
+                        toolbar.deactivate();
+                        break;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <button>绘制点</button>
+    <button>绘制折线</button>
+    <button>绘制面</button>
+    <button>绘制徒手线</button>
+    <button>绘制徒手面</button>
+    <button>结束绘制</button>
+    <div id="MyMapDiv" class="MapClass"></div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>ArcGIS Online底图</title>
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.20/3.20/esri/css/esri.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.20/3.20/init.js"></script>
+    <style>
+        #mapDiv
+        {
+            width: 900px;
+            height: 600px;
+            border: 2px dashed #0000ff;
+        }
+    </style>
+    <script>
+        require(["esri/map", "dojo/domReady!"], funBaseMap);
+        function funBaseMap(Map)
+        {
+            var map = new Map("mapDiv", { basemap: "streets" });
+        }
+    </script>
+</head>
+<body>
+    <div id="mapDiv"></div>
+</body>
+</html>

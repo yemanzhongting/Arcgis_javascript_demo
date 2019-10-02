@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>IdentifyTask空间查询</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/claro/claro.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        .MapClass
+        {
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/on",
+            "dojo/dom",
+            "esri/tasks/IdentifyTask",
+            "esri/tasks/IdentifyParameters",
+            "esri/toolbars/draw",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/graphic",
+            "dojo/domReady!"], funIdentifyTask);
+        function funIdentifyTask(Map, ArcGISDynamicMapServiceLayer, on, dom, IdentifyTask, IdentifyParameters, Draw, SimpleMarkerSymbol, SimpleFillSymbol, SimpleLineSymbol, Graphic)
+        {
+            //添加动态地图服务图层
+            var map = new Map("mapDiv");
+            MapServer = "http://localhost/ArcGIS/rest/services/usaDynamic/MapServer";
+            var layer = new ArcGISDynamicMapServiceLayer(MapServer);
+            map.addLayer(layer)
+            //显示所有图层
+            layer.setVisibleLayers([0, 1, 2, 3]);
+            //定义绘图对象
+            var toolBar = new Draw(map);
+            //绑定点击事件
+            on(dom.byId("Btn"), "click", funDraw);
+            function funDraw(e)
+            {
+                //激活绘图工具：绘制面
+                toolBar.activate(esri.toolbars.Draw.POLYGON);
+            }
+            //给绘图工具绑定绘图完成事件
+            on(toolBar, "draw-complete", funDrawComplete);
+            function funDrawComplete(result)
+            {
+                //获得绘图得到的面
+                var geometry = result.geometry;
+                //关闭绘图工具
+                toolBar.deactivate();
+                //执行空间查询
+                funIdentifyQuery(geometry);
+            }
+            function funIdentifyQuery(geometry)
+            {
+                //定义空间查询对象，注意他的参数是整个地图服务，而不是单个图层
+                var identifyTask = new IdentifyTask(MapServer);
+                //定义空间查询参数对象
+                var params = new IdentifyParameters();
+                //容差
+                params.tolerance = 5;
+                //是否返回几何信息
+                params.returnGeometry = true;
+                //空间查询的图层，此时是两个图层
+                params.layerIds = [0, 2];
+                //空间查询的条件
+                params.layerOption = IdentifyParameters.LAYER_OPTION_ALL;
+                params.width = map.width;
+                params.height = map.height;
+                //空间查询的几何对象
+                params.geometry = geometry;
+                params.mapExtent = map.extent;
+                //执行空间查询
+                identifyTask.execute(params, funShowQueryResult);
+            }
+            //funShowQueryResult函数处理查询结果
+            function funShowQueryResult(idResults)
+            {
+                //创建线符号
+                var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0, 0, 255]), 2);
+                //创建点符号
+                var pointSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10, lineSymbol, new dojo.Color([255, 0, 0]));
+                //创建面符号
+                var fill = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([0, 255, 0, 0.4]));
+                //返回查询结果时添加结果表格，并设置表格内容
+                if (idResults.length > 0)
+                {
+                    var htmls = "<table style=\"width: 100%\">";
+                    htmls = htmls + "<tr bgcolor=\"#E0E0E0\"><td> 图层 </td><td> 名 称</td></tr>";
+                    for (var i = 0; i < idResults.length; i++)
+                    {
+                        //获得查询结果要素
+                        var result = idResults[i];
+                        //获得图形graphic
+                        var graphic = result.feature;
+                        //根据查询图层，获得查询结果的名称信息，并根据图层设置符号
+                        var namevalue;
+                        if (result.layerName == "Cities")
+                        {
+                            graphic.setSymbol(pointSymbol);
+                            namevalue = result.feature.attributes.AREANAME;
+                        }
+                        else if (result.layerName == "States")
+                        {
+                            graphic.setSymbol(fill);
+                            namevalue = result.feature.attributes.STATE_NAME;
+                        }
+                        //隔行填充背景色，并添加显示内容
+                        if (i % 2 == 1)
+                        {
+                            htmls = htmls + "<tr  bgcolor=\"#E0E0E0\"><td>" + result.layerName + "</td><td>" + namevalue + "</td></tr>";
+                        }
+                        else
+                        {
+                            htmls = htmls + "<tr><td>" + result.layerName + "</td><td>" + namevalue + "</td></tr>";
+                        }
+                        //将graphic添加到地图中，从而实现高亮效果
+                        map.graphics.add(graphic);
+                    }
+                    htmls = htmls + "</table>";
+                    document.getElementById("divShowResult").innerHTML = htmls;
+                }
+                //未返回查询结果时不添加结果表格
+                else
+                {
+                    document.getElementById("divShowResult").innerHTML = "";
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="mapDiv" class="MapClass"></div>
+    <input type="button" value="空间查询" id="Btn" />
+    <div id="divShowResult"></div>
+</body>
+</html>

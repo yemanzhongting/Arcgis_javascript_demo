@@ -1,0 +1,100 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Graphic</title>
+    <link rel="stylesheet" href="http://localhost/arcgis_js_api/library/3.20/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://localhost/arcgis_js_api/library/3.20/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.20/3.20/init.js"></script>
+    <script type="text/javascript" src="../Dojo/jsapi_vsdoc12_v38.js"></script>
+    <!--定义地图样式-->
+    <style type="text/css">
+        .MapClass
+        {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+        //引入类库和事件处理函数
+        require(["esri/map",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "esri/layers/GraphicsLayer",
+            "dojo/on",
+            "dojo/query",
+            "dojo/colors",
+            "esri/graphic",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/geometry/Point",
+            "esri/geometry/Polyline",
+            "esri/geometry/Polygon",
+            "esri/geometry/Circle",
+            "dojo/domReady!"], funAddMap);
+        //事件处理函数
+        function funAddMap(Map, ArcGISDynamicMapServiceLayer, GraphicsLayer, on, query, Color, Graphic, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, Point, Polyline, Polygon, Circle)
+        {
+            //创建地图控件
+            var map = new Map("mapDiv");
+            //添加动态地图服务图层
+            var layer = new ArcGISDynamicMapServiceLayer("http://localhost/ArcGIS/rest/services/usaDynamic/MapServer");
+            map.addLayer(layer);
+            //添加GraphicsLayer图层
+            var graphicsLayer = new GraphicsLayer();
+            map.addLayer(graphicsLayer);
+            //添加按钮的单击事件
+            var btns = query("button");
+            on(btns, "click", funGraphic);
+            //按钮单击事件处理函数
+            function funGraphic(event)
+            {
+                //获取按钮文本
+                var text = this.innerHTML;
+                //声明点、线、面的Symbol
+                var lSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new Color([0, 0, 255]), 4);
+                var clSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([0, 0, 255]), 2);
+                var pSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_SQUARE, 10, clSymbol, new Color([255, 0, 0]));
+                var fSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, clSymbol, new Color([0, 255, 0]));
+                var geometry;
+                var graphic;
+                //点击不同按钮，分别创建点、线、面、圆Graphic
+                switch (text)
+                {
+                    case "添加点":
+                        geometry = new Point({ "x": -130, "y": 60, "spatialReference": map.spatialReference });
+                        graphic = new Graphic(geometry, pSymbol);
+                        break;
+                    case "添加线":
+                        var paths = [];
+                        paths[0] = [[-120, 60], [-110, 60], [-120, 50]];
+                        geometry = new Polyline({ "paths": paths, "spatialReference": map.spatialReference });
+                        graphic = new Graphic(geometry, lSymbol);
+                        break;
+                    case "添加面":
+                        var ring = [];
+                        ring[0] = [[-100, 60], [-90, 60], [-90, 50], [-100, 50],[-100,60]];
+                        geometry = new Polygon({ "rings": ring, "spatialReference": map.spatialReference });
+                        graphic = new Graphic(geometry, fSymbol);
+                        break;
+                    case "添加圆":
+                        var p = new Point({ "x": -80, "y": 55, "spatialReference": map.spatialReference });
+                        var r = 500000;
+                        geometry = new Circle(p, { "radius": r });
+                        graphic = new Graphic(geometry, fSymbol);
+                        break;
+                }
+                //将创建的Graphic添加到GraphicsLayer图层
+                graphicsLayer.add(graphic);
+            }
+        }
+    </script>
+</head>
+<body>
+    <button>添加点</button>
+    <button>添加线</button>
+    <button>添加面</button>
+    <button>添加圆</button>
+    <div id="mapDiv" class="MapClass"></div>
+</body>
+</html>

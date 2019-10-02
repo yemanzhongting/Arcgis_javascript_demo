@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>要素服务</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        html, body, #mapDiv
+        {
+            height: 100%;
+            width:100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/FeatureLayer", "dojo/domReady!"], funFeatureLayer);
+        function funFeatureLayer(Map, ArcGISTiledMapServiceLayer, FeatureLayer)
+        {
+            //创建底图图层
+            var map = new Map("mapDiv", { center: [-77.036, 38.891], zoom: 16 });
+            var agoServiceURL = "http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer";
+            var agoLayer = new ArcGISTiledMapServiceLayer(agoServiceURL);
+            map.addLayer(agoLayer);
+            //使用MapServer创建要素图层
+            var operationsLayer = new FeatureLayer("http://sampleserver5.arcgisonline.com/arcgis/rest/services/Energy/HSEC/MapServer/0", { mode: FeatureLayer.MODE_ONDEMAND, outFields: ["*"] });
+            map.addLayer(operationsLayer);
+            //使用FeatureServer创建要素图层
+            var operationsLayer2 = new FeatureLayer("http://sampleserver5.arcgisonline.com/arcgis/rest/services/Energy/HSEC/FeatureServer/2", { mode: FeatureLayer.MODE_ONDEMAND, outFields: ["*"] });
+            map.addLayer(operationsLayer2);
+        }
+    </script>
+</head>
+<body>
+    <div id="mapDiv"></div>
+</body>
+</html>

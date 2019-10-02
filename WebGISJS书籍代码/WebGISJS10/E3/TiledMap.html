@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>加载缓存地图服务</title>
+    <link rel="stylesheet" type="text/css" href="http://localhost/arcgis_js_api/library/3.20/3.20/esri/css/esri.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.20/3.20/init.js"></script>
+    <style>
+        #mapDiv
+        {
+            width: 900px;
+            height: 600px;
+            border: 2px dotted #00ff00;
+        }
+    </style>
+    <script>
+        require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "dojo/domReady!"], funTiledLayer);
+        function funTiledLayer(Map,ArcGISTiledMapServicelayer)
+        {
+            var map=new Map("mapDiv");
+            var tLayerURL="http://localhost/ArcGIS/rest/services/usaTiled/MapServer";
+            var tLayer=new ArcGISTiledMapServicelayer(tLayerURL);
+            map.addLayer(tLayer);
+        } 
+    </script>
+</head>
+<body>
+    <div id="mapDiv"></div>
+</body>
+</html>

@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>范围专题图</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        html, body, #map 
+        {
+            height: 100%;
+            margin: 0;
+        }
+        #info 
+        {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font: 14px sans-serif;
+            background: #fff;
+            width: 160px;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+                "esri/layers/ArcGISTiledMapServiceLayer",
+                "esri/layers/FeatureLayer",
+                "esri/InfoTemplate",
+                "esri/renderers/ClassBreaksRenderer",
+                "esri/symbols/SimpleFillSymbol",
+                "esri/dijit/Legend",
+                "esri/Color",
+                "dojo/domReady!"], funClassBreaks);
+        function funClassBreaks(Map, ArcGISTiledMapServiceLayer, FeatureLayer, InfoTemplate, ClassBreaksRenderer, SimpleFillSymbol, Legend, Color)
+        {
+            //添加底图
+            var map = new Map("map");
+            var baseMapUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+            var baseMap = new ArcGISTiledMapServiceLayer(baseMapUrl);
+            map.addLayer(baseMap);
+            //添加要素图层，并为要素图层添加点击窗口，标题为CNTRY_NAME值，内容显示所有字段
+            var layerUrl = "http://services.arcgis.com/BG6nSlhZSAWtExvp/ArcGIS/rest/services/Demographics_World_Simp/FeatureServer/0";
+            var layer = new FeatureLayer(layerUrl, {
+                infoTemplate: new InfoTemplate("${CNTRY_NAME}", "${*}"),
+                mode: FeatureLayer.MODE_ONDEMAND,
+                outFields: ["*"]});
+            //定义填充符号
+            var symbol = new SimpleFillSymbol();
+            //设置填充符号的填充颜色
+            symbol.setColor(new Color([150, 150, 150, 0.5]));
+            //定义范围专题图，默认符号使用symbol，数据值使用POP2007字段
+            var renderer = new ClassBreaksRenderer(symbol, "POP2007");
+            //为每个范围指定使用的符号
+            renderer.addBreak(0, 10000000, new SimpleFillSymbol().setColor(new Color([56, 168, 0, 0.5])));
+            renderer.addBreak(10000000, 50000000, new SimpleFillSymbol().setColor(new Color([139, 209, 0, 0.5])));
+            renderer.addBreak(50000000, 100000000, new SimpleFillSymbol().setColor(new Color([255, 255, 0, 0.5])));
+            renderer.addBreak(100000000, 500000000, new SimpleFillSymbol().setColor(new Color([255, 128, 0, 0.5])));
+            renderer.addBreak(500000000, Infinity, new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.5])));
+            //为要素图层设置范围专题图
+            layer.setRenderer(renderer);
+            //将要素图层添加到地图
+            map.addLayer(layer);
+            //为要素图层添加load事件，用来加载图例
+            layer.on("load", funlegend);
+            function funlegend()
+            {
+                var legend = new Legend({ map: map, layerInfos: [{ layer: layer, title: "各国人口"}] }, "legend");
+                legend.startup();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="info">
+        <div id="legend"></div>
+    </div>
+</body>
+</html>

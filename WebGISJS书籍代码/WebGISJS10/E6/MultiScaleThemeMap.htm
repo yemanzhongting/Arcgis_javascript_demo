@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>多比例尺专题图</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        html, body, #map 
+        {
+            height: 100%;
+            margin: 0;
+        }
+        #info 
+        {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font: 14px sans-serif;
+            background: #fff;
+            width: 160px;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+            "esri/layers/ArcGISTiledMapServiceLayer",
+            "esri/layers/FeatureLayer",
+            "esri/InfoTemplate",
+            "esri/renderers/ScaleDependentRenderer",
+            "esri/renderers/SimpleRenderer",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/dijit/Legend",
+            "esri/Color",
+            "dojo/domReady!"], funMultiScale);
+        function funMultiScale(Map, ArcGISTiledMapServiceLayer, FeatureLayer, InfoTemplate, ScaleDependentRenderer, SimpleRenderer, SimpleLineSymbol, SimpleMarkerSymbol, Legend, Color)
+        {
+            //添加底图
+            var map = new Map("map");
+            var baseMapUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+            var baseMap = new ArcGISTiledMapServiceLayer(baseMapUrl);
+            map.addLayer(baseMap);
+            //添加要素图层，并为要素图层添加点击窗口，标题为name_en值，内容显示所有字段
+            var layerUrl = "http://services.arcgis.com/V6ZHFr6zdgNZuVG0/ArcGIS/rest/services/WorldCities/FeatureServer/0";
+            var layer = new FeatureLayer(layerUrl, {
+                infoTemplate: new InfoTemplate("${name_en}", "${*}"),
+                mode: FeatureLayer.MODE_SNAPSHOT,
+                outFields: ["*"]
+            });
+            //定义点状符号
+            var markerSym = new SimpleMarkerSymbol();
+            //设置点状符号的颜色
+            markerSym.setColor(new Color([255, 0, 0]));
+            //设置点状符号的轮廓线
+            markerSym.setOutline(markerSym.outline.setColor(new Color([133, 197, 133, .75])));
+            //定义第一种渲染器，符号大小为3-20
+            var renderer1 = new SimpleRenderer(markerSym);
+            var proportionalSymbolInfo = {
+                //渲染使用的数据值字段
+                field: "pop",
+                //数据值单位
+                valueUnit: "unknown",
+                //数据值的最小值
+                minDataValue: 1000000,
+                //符号的最小尺寸
+                minSize: 3,
+                //符号的最大尺寸
+                maxSize: 20,
+                //图例显示的内容
+                legendOptions: { customValues: [1000000, 5000000, 10000000, 20000000, 30000000, 40000000]}
+            };
+            //调用setProportionalSymbolInfo方法设置等级符号渲染器
+            renderer1.setProportionalSymbolInfo(proportionalSymbolInfo);
+            //定义第二种渲染器，符号大小为10-30，方法同上
+            var renderer2 = new SimpleRenderer(markerSym);
+            var proportionalSymbolInfo2 = {
+                field: "pop",
+                valueUnit: "unknown",
+                minDataValue: 1000000,
+                minSize: 10,
+                maxSize: 30,
+                legendOptions: { customValues: [1000000, 5000000, 10000000, 20000000, 30000000, 40000000]}
+            };
+            renderer2.setProportionalSymbolInfo(proportionalSymbolInfo2);
+            //构造rendererInfos对象，指定比例尺在1:50000000—1:500000000时使用渲染器1，比例尺大于1:50000000时使用渲染器2
+            var params = { rendererInfos: [{ "renderer": renderer1, "minScale": 500000000, "maxScale": 50000000 }, { "renderer": renderer2, "minScale": 50000000}] };
+            //使用rendererInfos对象创建多比例尺渲染器scaleDependentRenderer
+            var scaleDependentRenderer = new ScaleDependentRenderer(params);
+            //为要素图层添加多比例尺渲染器
+            layer.setRenderer(scaleDependentRenderer);
+            //添加要素图层
+            map.addLayer(layer);
+            //为要素图层添加load事件，创建图例
+            layer.on("load", funlegend);
+            function funlegend()
+            {
+                var legend = new Legend({ map: map, layerInfos: [{ layer: layer, title: "世界大城市"}] }, "legend");
+                legend.startup();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="info">
+        <div id="legend"></div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>独立值专题图</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        html, body, #map 
+        {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+                "esri/layers/FeatureLayer",
+                "esri/layers/ArcGISTiledMapServiceLayer",
+                "esri/symbols/SimpleLineSymbol",
+                "esri/symbols/SimpleFillSymbol",
+                "esri/renderers/UniqueValueRenderer",
+                "esri/InfoTemplate",
+                "esri/Color",
+                "dojo/domReady!"], funUniqueValue)
+        function funUniqueValue(Map, FeatureLayer, ArcGISTiledMapServiceLayer, SimpleLineSymbol, SimpleFillSymbol, UniqueValueRenderer, InfoTemplate, Color)
+        {
+            //添加底图
+            var map = new Map("map", { center: [-95.625, 39.243], zoom: 4, slider: false });
+            var agoServiceURL = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+            var agoLayer = new ArcGISTiledMapServiceLayer(agoServiceURL);
+            map.addLayer(agoLayer);
+            //添加底图的load事件
+            map.on("load", addFeatureLayer);
+            //load事件处理函数
+            function addFeatureLayer()
+            {
+                //定义默认填充符号，设置填充为透明填充
+                var defaultSymbol = new SimpleFillSymbol().setStyle(SimpleFillSymbol.STYLE_NULL);
+                //设置默认符号轮廓线为无轮廓
+                defaultSymbol.outline.setStyle(SimpleLineSymbol.STYLE_NULL);
+                //声明独立值专题图，设定不符合指定值的区域默认填充符号以及指定值使用的匹配字段
+                var renderer = new UniqueValueRenderer(defaultSymbol, "SUB_REGION");
+                //为每个独立值指定不同的符号
+                renderer.addValue("Pacific", new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.5])));
+                renderer.addValue("Mtn", new SimpleFillSymbol().setColor(new Color([0, 255, 0, 0.5])));
+                renderer.addValue("N Eng", new SimpleFillSymbol().setColor(new Color([0, 0, 255, 0.5])));
+                renderer.addValue("S Atl", new SimpleFillSymbol().setColor(new Color([255, 0, 255, 0.5])));
+                renderer.addValue("Mid Atl", new SimpleFillSymbol().setColor(new Color([255, 255, 255, 0.75])));
+                renderer.addValue("E N Cen", new SimpleFillSymbol().setColor(new Color([0, 255, 255, 0.5])));
+                renderer.addValue("W N Cen", new SimpleFillSymbol().setColor(new Color([255, 255, 0, 0.5])));
+                renderer.addValue("E S Cen", new SimpleFillSymbol().setColor(new Color([127, 127, 127, 0.5])));
+                renderer.addValue("W S Cen", new SimpleFillSymbol().setColor(new Color([0, 0, 0, 0.5])));
+                //添加要素图层
+                var featureLayerURL = "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1"
+                //infoTemplate设置每个要素点击的弹出窗口，标题为空，显示SUB_REGION字段的属性值；按需显示模式；加载SUB_REGION字段
+                var featureLayer = new FeatureLayer(featureLayerURL, { infoTemplate: new InfoTemplate(" ", "${SUB_REGION}"), mode: FeatureLayer.MODE_ONDEMAND, outFields: ["SUB_REGION"] });
+                //调用要素图层的setRenderer方法，生成要素图层的独立值专题图
+                featureLayer.setRenderer(renderer);
+                //将要素图层添加到地图
+                map.addLayer(featureLayer);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>

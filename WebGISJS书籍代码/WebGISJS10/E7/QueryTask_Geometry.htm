@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>QueryTask空间查询</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/claro/claro.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        .MapClass
+        {
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/dom",
+            "dojo/on",
+            "esri/tasks/QueryTask",
+            "esri/toolbars/draw",
+            "esri/tasks/query",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/graphic",
+            "dojo/domReady!"], funQueryTask);
+        function funQueryTask(Map, ArcGISDynamicMapServiceLayer, dom, on, QueryTask, Draw, Query, SimpleLineSymbol, SimpleFillSymbol, Graphic)
+        {
+            //添加动态地图服务图层
+            var map = new Map("mapdiv");
+            var layer = new ArcGISDynamicMapServiceLayer("http://localhost/ArcGIS/rest/services/usaDynamic/MapServer");
+            map.addLayer(layer)
+            //显示所有图层
+            layer.setVisibleLayers([0, 1, 2, 3]);
+            //定义一个绘图工具
+            var toolBar = new Draw(map);
+            //给空间查询按钮绑定click事件
+            on(dom.byId("Btn"), "click", funDraw);
+            function funDraw()
+            {
+                //激活绘图工具，绘制一个面图形
+                toolBar.activate(Draw.POLYGON);
+            }
+            //给绘图工具绑定draw-complete事件
+            on(toolBar, "draw-complete", funDrawComplete);
+            function funDrawComplete(result)
+            {
+                //获得绘图得到的面
+                var geometry = result.geometry;
+                //关闭绘图工具
+                toolBar.deactivate();
+                //调用funQueryGraphic函数执行空间查询
+                funQueryGraphic(geometry);
+            }
+            function funQueryGraphic(geometry)
+            {
+                //创建查询对象，注意：服务的后面有一个编号，代表对那一个图层进行查询
+                var queryTask = new QueryTask("http://localhost/ArcGIS/rest/services/usaDynamic/MapServer/2");
+                //创建查询参数对象
+                var query = new Query();
+                //空间查询的几何对象
+                query.geometry = geometry;
+                //服务器给我们返回的字段信息，*代表返回所有字段
+                query.outFields = ["*"];
+                //空间参考信息
+                query.outSpatialReference = map.spatialReference;
+                //查询的标准，此处代表和geometry相交的图形都要返回
+                query.spatialRelationship = Query.SPATIAL_REL_INTERSECTS;
+                //是否返回几何信息
+                query.returnGeometry = true;
+                //执行空间查询
+                queryTask.execute(query, funShowQueryResult);
+            }
+            //funShowQueryResult函数处理查询结果
+            function funShowQueryResult(queryResult)
+            {
+                //创建线符号
+                var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0, 0, 255]), 2);
+                //创建面符号
+                var fill = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([0, 255, 0, 0.4]));
+                //未返回查询结果时不添加结果表格
+                if (queryResult.features.length == 0)
+                {
+                    dom.byId("divShowResult").innerHTML = "";
+                    return;
+                }
+                var htmls = "";
+                //返回查询结果时添加结果表格，并设置表格内容
+                if (queryResult.features.length >= 1)
+                {
+                    htmls = htmls + "<table style=\"width: 100%\">";
+                    htmls = htmls + "<tr><td>名称</td></tr>";
+                    for (var i = 0; i < queryResult.features.length; i++)
+                    {
+                        //得到graphic
+                        var graphic = queryResult.features[i];
+                        //给图形赋予符号
+                        graphic.setSymbol(fill);
+                        //添加到地图从而实现高亮效果
+                        map.graphics.add(graphic);
+                        //获得属性表中STATE_NAME的值
+                        var ptName = graphic.attributes["STATE_NAME"];
+                        //隔行填充背景色
+                        if (i % 2 == 0)
+                            htmls = htmls + "<tr>";
+                        else
+                            htmls = htmls + "<tr bgcolor=\"#F0F0F0\">";
+                        //在表格中显示查询结果
+                        htmls = htmls + "<td><a href=\"#\"\">" + ptName + "</a></td>";
+                        htmls = htmls + "</tr>";
+                    }
+                    htmls = htmls + "</table>";
+                    //将属性绑定在divShowResult上面
+                    dom.byId("divShowResult").innerHTML = htmls;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="mapdiv" class="MapClass"></div>
+    <input type="button" value="空间查询" id="Btn" />
+    <div id="divShowResult"></div>
+</body>
+</html>

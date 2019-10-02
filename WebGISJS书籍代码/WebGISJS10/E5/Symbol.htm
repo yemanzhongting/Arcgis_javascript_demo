@@ -1,0 +1,625 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>设置图形符号</title>
+    <!-- 引用项目内开发包
+    <link rel="stylesheet" type="text/css" href="../CSSJS/tundra.css" />
+    <link rel="stylesheet" type="text/css" href="../CSSJS/esri.css" />
+    <script type="text/javascript" src="../CSSJS/init.js"></script>
+    -->
+    <!--引用本地部署开发包-->
+    <link rel="stylesheet" href="http://localhost/arcgis_js_api/library/3.20/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://localhost/arcgis_js_api/library/3.20/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://localhost/arcgis_js_api/library/3.20/3.20/init.js"></script>
+    <!-- 引用在线API开发包
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    -->
+    <!--引用颜色选择器插件-->
+    <script type="text/javascript" src="../CSSJS/jscolor.js"></script>
+    <!--设置样式-->
+    <style>
+        /*地图样式:*/
+        .MapClass
+        {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #0094ff;
+        }
+        /*标签样式*/
+        .LabelClass
+        {
+            font-size:14px;
+            font-weight:bold;
+        }
+        /*控件区域样式*/
+        .DivClass
+        {
+            margin-left:20px;
+        }
+        /*结束绘制按钮样式*/
+        .btnClass
+        {
+            width: 100%;
+        }
+    </style>
+    <script type="text/javascript">
+        //全局函数
+        require(["esri/map",
+            "dojo/dom",
+            "dojo/on",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "esri/layers/GraphicsLayer",
+            "dojo/query",
+            "esri/toolbars/draw",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/CartographicLineSymbol",
+            "esri/graphic",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/PictureMarkerSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/symbols/PictureFillSymbol",
+            "esri/symbols/TextSymbol",
+            "esri/symbols/Font",
+            "dojo/domReady!"], funSymbol);
+        //全局事件响应函数
+        function funSymbol(Map, dom, on, ArcGISDynamicMapServiceLayer, GraphicsLayer,query, Draw, SimpleLineSymbol, CartographicLineSymbol, Graphic, SimpleMarkerSymbol, PictureMarkerSymbol, SimpleFillSymbol, PictureFillSymbol, TextSymbol, Font)
+        {
+            //加载地图和图层
+            var map = new Map("MyMapDiv");
+            var layer = new ArcGISDynamicMapServiceLayer("http://localhost/ArcGIS/rest/services/usaDynamic/MapServer");
+            map.addLayer(layer);
+            var graphicsLayer = new GraphicsLayer();
+            map.addLayer(graphicsLayer);
+            //声明绘图工具,第一个工具用来绘制点、线、面，第二个工具用来绘制文本
+            var toolbar = new Draw(map, { showTooltips: true });
+            var textToolbar = new Draw(map, { showTooltips: true });
+            //声明图形符号
+            //点轮廓符号
+            var mlSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 255]), 2);
+            //简单点符号
+            var mSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10, mlSymbol, new dojo.Color([0, 0, 0]));
+            //图标点符号
+            var pSymbol = new PictureMarkerSymbol("../Picture/symbol_circle.gif", 10, 10);
+            //线符号
+            var lSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASH, new dojo.Color([0, 0, 0]), 1);
+            //可设置端点和连接处的线符号
+            var clSymbol = new CartographicLineSymbol(CartographicLineSymbol.STYLE_SOLID, new dojo.Color([0, 0, 0]), 1, CartographicLineSymbol.CAP_BUTT, CartographicLineSymbol.JOIN_ROUND);
+            //填充轮廓线符号
+            var flSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0, 255, 255]), 2);
+            //简单填充符号
+            var fSymbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_BACKWARD_DIAGONAL, flSymbol, new dojo.Color([0, 0, 0]));
+            //图片填充符号
+            var pfSymbol = new PictureFillSymbol("../Picture/symbol_fill.jpg", flSymbol, 50, 50);
+            //文本符号
+            var txtSymbol = new TextSymbol();
+            //设置简单点符号的样式
+            on(SeltPointStyle, "change", funSeltPointStyleChange);
+            function funSeltPointStyleChange()
+            {
+                switch (SeltPointStyle.value)
+                {
+                    case "圆":
+                        mSymbol.setStyle(SimpleMarkerSymbol.STYLE_CIRCLE);
+                        break;
+                    case "十字形":
+                        mSymbol.setStyle(SimpleMarkerSymbol.STYLE_CROSS);
+                        break
+                    case "菱形":
+                        mSymbol.setStyle(SimpleMarkerSymbol.STYLE_DIAMOND);
+                        break
+                    case "正方形":
+                        mSymbol.setStyle(SimpleMarkerSymbol.STYLE_SQUARE);
+                        break
+                    case "叉形":
+                        mSymbol.setStyle(SimpleMarkerSymbol.STYLE_X);
+                        break
+                }
+            }
+            //设置简单点符号和图标点符号的尺寸
+            on(txtPointSize, "change", funtxtPointSize);
+            function funtxtPointSize()
+            {
+                pSymbol.setHeight(txtPointSize.value);
+                pSymbol.setWidth(txtPointSize.value);
+                mSymbol.setSize(txtPointSize.value);
+            }
+            //设置简单点符号的颜色
+            on(txtPointColor, "change", funtxtPointColor);
+            function funtxtPointColor()
+            {
+                var pColor = "#" + txtPointColor.value;
+                mSymbol.setColor(new dojo.Color(pColor));
+            }
+            //设置简单点符号轮廓颜色
+            on(txtPointCrossColor, "change", funtxtPointCrossColor);
+            function funtxtPointCrossColor()
+            {
+                var psColor = "#" + txtPointCrossColor.value;
+                mlSymbol.setColor(new dojo.Color(psColor));
+            }
+            //设置图标点符号的图片源
+            on(seltPSymbol, "change", funseltPSymbol);
+            function funseltPSymbol()
+            {
+                if (seltPSymbol.value == "警告标识")
+                    pSymbol.setUrl("../Picture/symbol_circle.gif");
+                else if (seltPSymbol.value == "树叶标识")
+                    pSymbol.setUrl("../Picture/symbol_leaf.gif");
+            }
+            //设置简单线符号的线型
+            on(seltLineStyle, "change", funseltLineStyle);
+            function funseltLineStyle()
+            {
+                switch (seltLineStyle.value)
+                {
+                    case "横线":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_DASH);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_DASH);
+                        break;
+                    case "横线-点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_DASHDOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_DASHDOT);
+                        break;
+                    case "横线-点-点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_DASHDOTDOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_DASHDOTDOT);
+                        break;
+                    case "点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_DOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_DOT);
+                        break;
+                    case "长线":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_LONGDASH);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_LONGDASH);
+                        break;
+                    case "长线-点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_LONGDASHDOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_LONGDASHDOT);
+                        break;
+                    case "无符号":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_NULL);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_NULL);
+                        break;
+                    case "短线":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDASH);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDASH);
+                        break;
+                    case "短线-点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDASHDOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDASHDOT);
+                        break;
+                    case "短线-点-点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDASHDOTDOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDASHDOTDOT);
+                        break;
+                    case "密集点":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDOT);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_SHORTDOT);
+                        break;
+                    case "实线":
+                        clSymbol.setStyle(SimpleLineSymbol.STYLE_SOLID);
+                        lSymbol.setStyle(SimpleLineSymbol.STYLE_SOLID);
+                        break;
+                }
+            }
+            //设置线符号的颜色
+            on(txtLineColor, "change", funtxtLineColor);
+            function funtxtLineColor()
+            {
+                var lColor = "#" + txtLineColor.value;
+                clSymbol.setColor(new dojo.Color(lColor));
+                lSymbol.setColor(new dojo.Color(lColor));
+            }
+            //设置线符号的宽度
+            on(txtLineWidth, "change", funtxtLineWidth);
+            function funtxtLineWidth()
+            {
+                clSymbol.setWidth(txtLineWidth.value);
+                lSymbol.setWidth(txtLineWidth.value);
+            }
+            //设置线符号端点类型
+            on(seltLineCapStyle, "change", funseltLineCapStyle);
+            function funseltLineCapStyle()
+            {
+                switch (seltLineCapStyle.value)
+                {
+                    case "CAP_BUTT":
+                        clSymbol.setCap(CartographicLineSymbol.CAP_BUTT);
+                        break;
+                    case "CAP_ROUND":
+                        clSymbol.setCap(CartographicLineSymbol.CAP_ROUND);
+                        break;
+                    case "CAP_SQUARE":
+                        clSymbol.setCap(CartographicLineSymbol.CAP_SQUARE);
+                        break;
+                }
+            }
+            //设置线符号连接处类型
+            on(seltLineJoinStyle, "change", funseltLineJoinStyle);
+            function funseltLineJoinStyle()
+            {
+                switch (seltLineJoinStyle.value)
+                {
+                    case "JOIN_ROUND":
+                        clSymbol.setJoin(CartographicLineSymbol.JOIN_ROUND);
+                        break;
+                    case "JOIN_MITER":
+                        clSymbol.setJoin(CartographicLineSymbol.JOIN_MITER);
+                        break;
+                    case "JOIN_BEVEL":
+                        clSymbol.setJoin(CartographicLineSymbol.JOIN_BEVEL);
+                        break;
+                }
+            }
+            //设置简单填充符号填充类型
+            on(seltFillStyle, "change", funseltFillStyle);
+            function funseltFillStyle()
+            {
+                switch (seltFillStyle.value)
+                {
+                    case "反斜线":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_BACKWARD_DIAGONAL);
+                        break;
+                    case "网格":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_CROSS);
+                        break;
+                    case "斜网格":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_DIAGONAL_CROSS);
+                        break;
+                    case "正斜线":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_FORWARD_DIAGONAL);
+                        break;
+                    case "水平线":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_HORIZONTAL);
+                        break;
+                    case "无填充":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_NULL);
+                        break;
+                    case "实填充":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_SOLID);
+                        break;
+                    case "竖直线":
+                        fSymbol.setStyle(SimpleFillSymbol.STYLE_VERTICAL);
+                        break;
+                }
+            }
+            //设置实填充颜色
+            on(txtFillColor, "change", funtxtFillColor);
+            function funtxtFillColor()
+            {
+                var fColor = "#" + txtFillColor.value;
+                fSymbol.setColor(new dojo.Color(fColor));
+            }
+            //设置填充轮廓颜色
+            on(txtFillCrossColor, "change", funtxtFillCrossColor);
+            function funtxtFillCrossColor()
+            {
+                var fsColor = "#" + txtFillCrossColor.value;
+                flSymbol.setColor(new dojo.Color(fsColor));
+            }
+            //设置图片填充图片尺寸
+            on(txtPFillSize, "change", funtxtPFillSize);
+            function funtxtPFillSize()
+            {
+                pfSymbol.setHeight(txtPFillSize.value);
+                pfSymbol.setWidth(txtPFillSize.value);
+            }
+            //设置文本符号
+            //声明文本符号字体,文本内容,文本颜色
+            var textSymbolFont = new Font();
+            var textSymbolText = "WebGIS";
+            var textSymbolColor = new dojo.Color("#000000");
+            //设置默认初始文本符号的文本内容
+            txtSymbol.setText(textSymbolText);
+            //设置文本符号字体大小
+            on(txtTextSymbolSize, "change", funtxtTextSymbolSize);
+            function funtxtTextSymbolSize()
+            {
+                textSymbolFont.setSize(txtTextSymbolSize.value);
+            }
+            //设置文本符号文本内容
+            on(txtTextSymbolText, "change", funtxtTextSymbolText);
+            function funtxtTextSymbolText()
+            {
+                txtSymbol.setText(txtTextSymbolText.value);
+            }
+            //设置文本符号颜色
+            on(txtTextSymbolColor, "change", funtxtTextSymbolColor);
+            function funtxtTextSymbolColor()
+            {
+                var txtSymbolColor = "#" + txtTextSymbolColor.value;
+                txtSymbol.setColor(new dojo.Color(txtSymbolColor));
+            }
+            //设置文本符号对齐方式
+            on(seltTextSymbolAlign, "change", funseltTextSymbolAlign);
+            function funseltTextSymbolAlign()
+            {
+                switch (seltTextSymbolAlign.value)
+                {
+                    case "左对齐":
+                        txtSymbol.setAlign(TextSymbol.ALIGN_START);
+                        break;
+                    case "居中对齐":
+                        txtSymbol.setAlign(TextSymbol.ALIGN_MIDDLE);
+                        break;
+                    case "右对齐":
+                        txtSymbol.setAlign(TextSymbol.ALIGN_END);
+                        break;
+                }
+            }
+            //设置文本符号划线类型
+            on(seltTextSymbolDecoration, "change", funseltTextSymbolDecoration);
+            function funseltTextSymbolDecoration()
+            {
+                switch (seltTextSymbolDecoration.value)
+                {
+                    case "无划线":
+                        txtSymbol.setDecoration(TextSymbol.DECORATION_NONE);
+                        break;
+                    case "上划线":
+                        txtSymbol.setDecoration(TextSymbol.DECORATION_OVERLINE);
+                        break;
+                    case "下划线":
+                        txtSymbol.setDecoration(TextSymbol.DECORATION_UNDERLINE);
+                        break;
+                    case "删除线":
+                        txtSymbol.setDecoration(TextSymbol.DECORATION_LINETHROUGH);
+                        break;
+                }
+            }
+            //设置文本符号旋转角度
+            on(txtTextSymbolAngle, "change", funtxtTextSymbolAngle);
+            function funtxtTextSymbolAngle()
+            {
+                txtSymbol.setAngle(txtTextSymbolAngle.value);
+            }
+            //点击按钮绘制文本符号(本质上是点)
+            on(btnText, "click", funbtnText);
+            function funbtnText(event)
+            {
+                toolbar.deactivate();
+                textToolbar.activate(Draw.POINT, { showTooltips: true });
+            }
+            //添加绘制的文本符号到地图图层
+            on(textToolbar, "draw-complete", funTextResult);
+            function funTextResult(result)
+            {
+                //移除个文本框焦点,以便触发change事件
+                txtTextSymbolSize.blur();
+                txtTextSymbolText.blur();
+                txtTextSymbolColor.blur();
+                txtTextSymbolAngle.blur();
+                txtSymbol.setFont(textSymbolFont);
+                var textGraphic;
+                var textGeometry = result.geometry;
+                //生成graphic并设置为文本符号
+                textGraphic = new Graphic(textGeometry, txtSymbol);
+                //添加graphic到地图
+                graphicsLayer.add(textGraphic);
+            }
+            //添加绘制的点,线,面到地图图层
+            on(toolbar, "draw-complete", funResult);
+            function funResult(result)
+            {
+                txtPointSize.blur();
+                txtPointColor.blur();
+                txtPointCrossColor.blur();
+                txtLineColor.blur();
+                txtLineWidth.blur();
+                txtFillColor.blur();
+                txtFillCrossColor.blur();
+                txtPFillSize.blur();
+                var geometry = result.geometry;
+                var type = geometry.type;
+                var graphic;
+                //分别为点,线,面设置不同的符号并生成graphic
+                switch (type)
+                {
+                    case "point":
+                        if (seltPointSymbolStyle.value == "SimpleMarkSymbol")
+                        {
+                            graphic = new Graphic(geometry, mSymbol);
+                        }
+                        else if (seltPointSymbolStyle.value == "PictureMarkSymbol")
+                        {
+                            pSymbol.setOffset(0, txtPointSize.value / 2);
+                            graphic = new Graphic(geometry, pSymbol);
+                        }
+                        break;
+                    case "polyline":
+                        if (seltLineSymbolStyle.value == "SimpleLineSymbol")
+                        {
+                            graphic = new Graphic(geometry, lSymbol);
+                        }
+                        else
+                        {
+                            graphic = new Graphic(geometry, clSymbol);
+                        }
+                        break;
+                    case "polygon":
+                        if (seltFillSymbolStyle.value == "SimpleFillSymbol")
+                        {
+                            graphic = new Graphic(geometry, fSymbol);
+                        }
+                        else
+                        {
+                            graphic = new Graphic(geometry, pfSymbol);
+                        }
+                        break;
+                }
+                //添加graphic到地图
+                graphicsLayer.add(graphic);
+                //toolbar.deactivate();
+            }
+            //点击按钮时,调用Draw工具绘制点、线、面
+            query("button").on("click", funEvent);
+            function funEvent(event)
+            {
+                //获取页面上的按钮文本
+                var value = this.innerHTML;
+                //根据点击的按钮分别沪指点、线、面
+                switch (value)
+                {
+                    case "绘制点":
+                        //停止Draw工具绘图，释放鼠标
+                        textToolbar.deactivate();
+                        //绘图，并为鼠标添加提示
+                        toolbar.activate(Draw.POINT, { showTooltips: true });
+                        break;
+                    case "绘制折线":
+                        textToolbar.deactivate();
+                        toolbar.activate(Draw.POLYLINE, { showTooltips: true });
+                        break;
+                    case "绘制面":
+                        textToolbar.deactivate();
+                        toolbar.activate(Draw.POLYGON, { showTooltips: true });
+                        break;
+                    case "绘制徒手线":
+                        textToolbar.deactivate();
+                        toolbar.activate(Draw.FREEHAND_POLYLINE, { showTooltips: true });
+                        break;
+                    case "绘制徒手面":
+                        textToolbar.deactivate();
+                        toolbar.activate(Draw.FREEHAND_POLYGON, { showTooltips: true });
+                        break;
+                    case "结束绘制":
+                        //停止两个Draw工具绘图，释放鼠标
+                        toolbar.deactivate();
+                        textToolbar.deactivate();
+                        break;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <!--绘制点和设置点符号的相关控件-->
+    <div class="DivClass">
+        <button>绘制点</button>
+        <label class="LabelClass">点符号类型：</label>
+        <select id="seltPointSymbolStyle">
+            <option>SimpleMarkSymbol</option>
+            <option>PictureMarkSymbol</option>
+        </select>
+        <label class="LabelClass">点的形状：</label>
+        <select id="SeltPointStyle">
+            <option>圆</option>
+            <option>十字形</option>
+            <option>菱形</option>
+            <option>正方形</option>
+            <option>叉形</option>
+        </select>
+        <label class="LabelClass">点的大小：</label>
+        <input id="txtPointSize" type="text" size="1" value="10" />
+        <label class="LabelClass">点的颜色：</label>
+        <input id="txtPointColor" class="jscolor" value="000000" size="4" />
+        <label class="LabelClass">点轮廓颜色：</label>
+        <input id="txtPointCrossColor" class="jscolor" value="ff00ff" size="4" />
+        <select id="seltPSymbol">
+            <option>警告标识</option>
+            <option>树叶标识</option>
+        </select>
+    </div>
+    <!--绘制线和设置线符号的相关控件-->
+    <div class="DivClass">
+        <button>绘制折线</button>
+        <button>绘制徒手线</button>
+        <label class="LabelClass">线符号类型：</label>
+        <select id="seltLineSymbolStyle">
+            <option>SimpleLineSymbol</option>
+            <option>CartographicLineSymbol</option>
+        </select>
+        <label class="LabelClass">线形状：</label>
+        <select id="seltLineStyle">
+            <option>横线</option>
+            <option>横线-点</option>
+            <option>横线-点-点</option>
+            <option>点</option>
+            <option>长线</option>
+            <option>长线-点</option>
+            <option>无符号</option>
+            <option>短线</option>
+            <option>短线-点</option>
+            <option>短线-点-点</option>
+            <option>密集点</option>
+            <option>实线</option>
+        </select>
+        <label class="LabelClass">线颜色：</label>
+        <input id="txtLineColor" class="jscolor" value="000000" size="4" />
+        <label class="LabelClass">线宽度：</label>
+        <input id="txtLineWidth" value="1" size="1" />
+        <label class="LabelClass">线端点显示模式：</label>
+        <select id="seltLineCapStyle">
+            <option>CAP_BUTT</option>
+            <option>CAP_ROUND</option>
+            <option>CAP_SQUARE</option>
+        </select>
+        <label class="LabelClass">线段连接处显示模式：</label>
+        <select id="seltLineJoinStyle">
+            <option>JOIN_ROUND</option>
+            <option>JOIN_MITER</option>
+            <option>JOIN_BEVEL</option>
+        </select>
+    </div>
+    <!--绘制面和设置面符号的相关控件-->
+    <div class="DivClass">
+        <button>绘制面</button>
+        <button>绘制徒手面</button>
+        <label class="LabelClass">填充符号类型：</label>
+        <select id="seltFillSymbolStyle">
+            <option>SimpleFillSymbol</option>
+            <option>PictureFillSymbol</option>
+        </select>
+        <label class="LabelClass">填充类型：</label>
+        <select id="seltFillStyle">
+            <option>反斜线</option>
+            <option>网格</option>
+            <option>正斜线</option>
+            <option>斜网格</option>
+            <option>水平线</option>
+            <option>无填充</option>
+            <option>实填充</option>
+            <option>竖直线</option>
+        </select>
+        <label class="LabelClass">实填充颜色：</label>
+        <input id="txtFillColor" class="jscolor" value="000000" size="4" />
+        <label class="LabelClass">填充轮廓颜色：</label>
+        <input id="txtFillCrossColor" class="jscolor" value="00ffff" size="4" />
+        <label class="LabelClass">填充图片大小：</label>
+        <input id="txtPFillSize" value="50" size="1" />
+    </div>
+    <!--绘制文本和设置文本符号的相关控件-->
+    <div class="DivClass">
+        <button id="btnText">文本</button>
+        <label class="LabelClass">字体大小：</label>
+        <input id="txtTextSymbolSize" value="12" size="1" />
+        <label class="LabelClass">文本内容：</label>
+        <input id="txtTextSymbolText" value="WebGIS" size="6" />
+        <label class="LabelClass">文本颜色：</label>
+        <input id="txtTextSymbolColor" class="jscolor" value="000000" size="4" />
+        <label class="LabelClass">水平对齐：</label>
+        <select id="seltTextSymbolAlign">
+            <option>居中对齐</option>
+            <option>左对齐</option>
+            <option>右对齐</option>
+        </select>
+        <label class="LabelClass">文本划线：</label>
+        <select id="seltTextSymbolDecoration">
+            <option>无划线</option>
+            <option>上划线</option>
+            <option>下划线</option>
+            <option>删除线</option>
+        </select>
+        <label class="LabelClass">文本角度：</label>
+        <input id="txtTextSymbolAngle" value="0" size="1" />
+    </div>
+    <!--结束绘制俺按钮-->
+    <div class="DivClass">
+        <button class="btnClass">结束绘制</button>
+    </div>
+    <!--地图控件-->
+    <div id="MyMapDiv" class="MapClass"></div>
+</body>
+</html>

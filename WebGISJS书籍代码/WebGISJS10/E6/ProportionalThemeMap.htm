@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>等级符号专题图</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/tundra/tundra.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        html, body, #map 
+        {
+            height: 100%;
+            margin: 0;
+        }
+        #info 
+        {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font: 14px sans-serif;
+            background: #fff;
+            width: 160px;
+            text-align: center;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+                "esri/layers/ArcGISTiledMapServiceLayer",
+                "esri/layers/FeatureLayer",
+                "esri/InfoTemplate",
+                "esri/renderers/DotDensityRenderer",
+                "esri/symbols/SimpleLineSymbol",
+                "esri/dijit/Legend",
+                "esri/Color",
+                "dojo/domReady!"], funProportional);
+        function funProportional(Map, ArcGISTiledMapServiceLayer, FeatureLayer, InfoTemplate, DotDensityRenderer, SimpleLineSymbol, Legend, Color)
+        {
+            //添加底图
+            var map = new Map("map");
+            var baseMapUrl = "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+            var baseMap = new ArcGISTiledMapServiceLayer(baseMapUrl);
+            map.addLayer(baseMap);
+            //添加要素图层，并为要素图层添加点击窗口，标题为name_en值，内容显示所有字段
+            var layerUrl = "http://services.arcgis.com/V6ZHFr6zdgNZuVG0/ArcGIS/rest/services/WorldCities/FeatureServer/0";
+            var layer = new FeatureLayer(layerUrl, {
+                infoTemplate: new InfoTemplate("${name_en}", "${*}"),
+                mode: FeatureLayer.MODE_SNAPSHOT,
+                outFields: ["*"]});
+            //定义等级符号
+            var proportionalSymbolInfo = {
+                field: "pop",
+                valueUnit: "unknown",
+                minDataValue: 1000000,
+                minSize: 3,
+                maxSize: 30,
+                legendOptions: { customValues: [1000000, 5000000, 10000000, 20000000, 30000000, 40000000]}};
+            //将要素图层添加到地图
+            map.addLayer(layer);
+            //为要素图层添加load事件，用来设置等级符号并加载图例
+            layer.on("load", funlegend);
+            function funlegend()
+            {
+                //调用renderer的setProportionalSymbolInfo方法，加载等级符号
+                layer.renderer.setProportionalSymbolInfo(proportionalSymbolInfo);
+                var legend = new Legend({ map: map, layerInfos: [{ layer: layer, title: "世界大城市"}] }, "legend");
+                legend.startup();
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="info">
+        <div id="legend"></div>
+    </div>
+</body>
+</html>

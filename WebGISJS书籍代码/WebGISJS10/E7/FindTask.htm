@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>FindTask属性查询</title>
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/esri/css/esri.css" />
+    <link rel="stylesheet" href="http://js.arcgis.com/3.20/dijit/themes/claro/claro.css" />
+    <script type="text/javascript" src="http://js.arcgis.com/3.20/init.js"></script>
+    <style type="text/css">
+        .MapClass
+        {
+            width:100%;
+            height:600px;
+            border:1px solid #000;
+        }
+    </style>
+    <script type="text/javascript">
+        require(["esri/map",
+            "esri/layers/ArcGISDynamicMapServiceLayer",
+            "dojo/on",
+            "dojo/dom",
+            "esri/tasks/FindTask",
+            "esri/tasks/FindParameters",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/graphic",
+            "dojo/domReady!"], funFindTask);
+        function funFindTask(Map, ArcGISDynamicMapServiceLayer, on, dom, FindTask, FindParameters, SimpleLineSymbol, SimpleFillSymbol, Graphic)
+        {
+            //添加动态地图服务图层
+            var map = new esri.Map("mapDiv");
+            var MapServer = "http://localhost/ArcGIS/rest/services/usaDynamic/MapServer";
+            var layer = new ArcGISDynamicMapServiceLayer(MapServer);
+            map.addLayer(layer)
+            //显示所有要素图层
+            layer.setVisibleLayers([0, 1, 2, 3]);
+            //创建属性查询对象
+            var findTask = new FindTask(MapServer);
+            //创建属性查询参数
+            var findParams = new FindParameters();
+            //给属性查询按钮添加click事件
+            on(dom.byId("Btn"), "click", funFind);
+            function funFind()
+            {
+                //是否返回几何信息
+                findParams.returnGeometry = true;
+                //设置查询图层
+                findParams.layerIds = [2];
+                //设置查询的字段
+                findParams.searchFields = ["STATE_NAME"];
+                //设置查询条件
+                findParams.searchText = txtSearchText.value;
+                //执行查询对象
+                findTask.execute(findParams, funShowFindResult);
+            }
+            function funShowFindResult(queryResult)
+            {
+                //创建线符号
+                var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new dojo.Color([0, 0, 255]), 3);
+                //创建面符号
+                var fill = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, lineSymbol, new dojo.Color([0, 255, 0, 0.6]));
+                //未返回查询结果时不添加结果表格
+                if (queryResult.length == 0)
+                {
+                    dom.byId("divShowResult").innerHTML = "";
+                    return;
+                }
+                var htmls = "";
+                //返回查询结果时添加结果表格，并设置表格内容
+                if (queryResult.length >= 1)
+                {
+                    htmls = htmls + "<table style=\"width: 100%\">";
+                    htmls = htmls + "<tr><td>名称</td></tr>";
+                    for (var i = 0; i < queryResult.length; i++)
+                    {
+                        //获得图形graphic
+                        var graphic = queryResult[i].feature;
+                        //赋予相应的符号
+                        graphic.setSymbol(fill);
+                        //将graphic添加到地图中，从而实现高亮效果
+                        map.graphics.add(graphic);
+                        //获得属性表中STATE_NAME的值
+                        var ptName = graphic.attributes["STATE_NAME"];
+                        //隔行填充背景色
+                        if (i % 2 == 0)
+                            htmls = htmls + "<tr>";
+                        else
+                            htmls = htmls + "<tr bgcolor=\"#F0F0F0\">";
+                        //在表格中显示查询结果
+                        htmls = htmls + "<td><a href=\"#\" \">" + ptName + "</a></td>";
+                        htmls = htmls + "</tr>";
+                    }
+                    htmls = htmls + "</table>";
+                    //将属性绑定在divShowResult上面
+                    dom.byId("divShowResult").innerHTML = htmls;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="mapDiv" class="MapClass"></div>
+    <input id="txtSearchText" value="Mi" />
+    <input type="button" value="属性查询" id="Btn" />
+    <div id="divShowResult"></div>
+</body>
+</html>
